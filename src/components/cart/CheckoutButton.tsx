@@ -12,8 +12,8 @@ interface CheckoutButtonProps {
   children?: React.ReactNode;
 }
 
-/** Crea una sesión de Stripe Checkout y redirige al formulario de pago con tarjeta. */
-export function CheckoutButton({ items, disabled, className = "", children = "Pagar con tarjeta" }: CheckoutButtonProps) {
+/** Prepara el pago en /api/checkout y redirige al Web Checkout de Wompi. */
+export function CheckoutButton({ items, disabled, className = "", children = "Ir a pagar" }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

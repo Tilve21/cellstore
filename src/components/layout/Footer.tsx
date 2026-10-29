@@ -36,7 +36,7 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10">
         <p className="mx-auto max-w-7xl px-4 py-6 text-xs sm:px-6">
-          © {new Date().getFullYear()} {storeConfig.name}. Todos los derechos reservados. Pagos procesados de forma segura por Stripe.
+          © {new Date().getFullYear()} {storeConfig.name}. Todos los derechos reservados. Pagos procesados de forma segura por Wompi.
         </p>
       </div>
     </footer>

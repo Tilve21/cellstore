@@ -1,6 +1,6 @@
 import type { CartItem, CheckoutRequest } from "@/types";
 
-/** Llama a /api/checkout y redirige al cliente a la página de pago de Stripe. */
+/** Llama a /api/checkout y redirige al cliente al Web Checkout de Wompi. */
 export async function redirectToCheckout(items: CartItem[]): Promise<void> {
   const payload: CheckoutRequest = {
     items: items.map(({ productId, variantId, quantity }) => ({ productId, variantId, quantity })),

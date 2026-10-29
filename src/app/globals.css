@@ -4,7 +4,7 @@
   --font-sans: var(--font-geist-sans);
 }
 
-/* Color de marca: cámbialo aquí y en storeConfig.brandColor (Stripe Checkout) */
+/* Color de marca: cámbialo aquí y en storeConfig.brandColor */
 @theme {
   --color-brand-50: #f1f0ff;
   --color-brand-100: #e4e1ff;

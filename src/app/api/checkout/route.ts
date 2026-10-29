@@ -1,9 +1,9 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import type Stripe from "stripe";
 import { storeConfig } from "@/config/store";
-import { resolveCartItems } from "@/lib/cart";
-import { toStripeAmount } from "@/lib/format";
-import { getSiteUrl, getStripe } from "@/lib/stripe";
+import { cartSubtotal, resolveCartItems } from "@/lib/cart";
+import { toCents } from "@/lib/format";
+import { buildCheckoutUrl, getSiteUrl } from "@/lib/wompi";
 import type { CheckoutRequest } from "@/types";
 
 export const runtime = "nodejs";
@@ -46,69 +46,21 @@ export async function POST(request: Request) {
     }
   }
 
-  const siteUrl = getSiteUrl();
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
-    quantity: item.quantity,
-    price_data: {
-      currency: storeConfig.currency,
-      unit_amount: toStripeAmount(item.variant.price),
-      product_data: {
-        name: `${item.product.name} · ${item.variant.label}`,
-        description: item.product.description,
-        ...(item.product.image ? { images: [`${siteUrl}${item.product.image}`] } : {}),
-        metadata: { productId: item.product.id, variantId: item.variant.id },
-      },
-    },
-  }));
+  // Referencia única del pedido; Wompi la devuelve en la transacción y en los eventos.
+  const reference = `PS-${Date.now().toString(36)}-${randomBytes(3).toString("hex")}`.toUpperCase();
+  const cart = items.map((i) => `${i.quantity}x ${i.product.name} ${i.variant.label}`).join(", ");
 
   try {
-    const session = await getStripe().checkout.sessions.create({
-      mode: "payment",
-      allowed_payment_method_types: ["card"],
-      line_items: lineItems,
-      locale: "es",
-      submit_type: "pay",
-      branding_settings: {
-        display_name: storeConfig.name,
-        button_color: storeConfig.brandColor,
-        border_style: "rounded",
-        font_family: "inter",
-      },
-      custom_text: {
-        submit: {
-          message: `Envío gratis en ${storeConfig.shipping.minDays} a ${storeConfig.shipping.maxDays} días hábiles. Garantía de 12 meses.`,
-        },
-      },
-      billing_address_collection: "required",
-      shipping_address_collection: {
-        allowed_countries:
-          storeConfig.shippingCountries as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
-      },
-      phone_number_collection: { enabled: true },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            display_name: storeConfig.shipping.label,
-            fixed_amount: { amount: 0, currency: storeConfig.currency },
-            delivery_estimate: {
-              minimum: { unit: "business_day", value: storeConfig.shipping.minDays },
-              maximum: { unit: "business_day", value: storeConfig.shipping.maxDays },
-            },
-          },
-        },
-      ],
-      metadata: {
-        cart: JSON.stringify(items.map((i) => [i.productId, i.variantId, i.quantity])),
-      },
-      success_url: `${siteUrl}/checkout/exito?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/carrito?cancelado=1`,
+    const url = buildCheckoutUrl({
+      reference,
+      amountInCents: toCents(cartSubtotal(items)),
+      currency: storeConfig.currency,
+      redirectUrl: `${getSiteUrl()}/checkout/exito`,
     });
-
-    if (!session.url) throw new Error("Stripe no devolvió URL de checkout");
-    return NextResponse.json({ url: session.url });
+    console.log("[checkout] Pedido creado", { reference, cart });
+    return NextResponse.json({ url });
   } catch (error) {
-    console.error("[checkout] Error creando sesión de Stripe:", error);
+    console.error("[checkout] Error preparando el pago de Wompi:", error);
     return NextResponse.json(
       { error: "No pudimos iniciar el pago. Intenta de nuevo en unos segundos." },
       { status: 500 },

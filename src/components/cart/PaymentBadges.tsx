@@ -6,7 +6,7 @@ const cards = [
   { name: "AMEX", className: "font-black tracking-tight text-[#2e77bb]" },
 ];
 
-/** Logos de tarjetas aceptadas + sello de Stripe. */
+/** Logos de tarjetas aceptadas + sello de Wompi. */
 export function PaymentBadges({ variant = "light" }: { variant?: "light" | "dark" }) {
   return (
     <div className={`flex flex-col gap-2 text-xs ${variant === "dark" ? "text-zinc-400" : "items-center text-zinc-500"}`}>
@@ -30,7 +30,7 @@ export function PaymentBadges({ variant = "light" }: { variant?: "light" | "dark
       </div>
       <p className="flex items-center gap-1.5">
         <Icon name="lock" className="h-3.5 w-3.5" />
-        Pago encriptado y procesado por Stripe
+        Pago seguro con Wompi · Tarjetas, PSE y Nequi
       </p>
     </div>
   );

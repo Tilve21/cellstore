@@ -4,14 +4,14 @@ import { redirect } from "next/navigation";
 import { ClearCartOnMount } from "@/components/cart/ClearCartOnMount";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { storeConfig } from "@/config/store";
-import { formatPrice, fromStripeAmount } from "@/lib/format";
-import { getStripe } from "@/lib/stripe";
+import { formatPrice, fromCents } from "@/lib/format";
+import { getTransaction } from "@/lib/wompi";
 
-export const metadata: Metadata = { title: "Pago confirmado" };
+export const metadata: Metadata = { title: "Resultado del pago" };
 export const dynamic = "force-dynamic";
 
 const nextSteps: { icon: IconName; title: string; text: string }[] = [
-  { icon: "mail", title: "Confirmación", text: "Te enviamos el recibo de pago a tu correo." },
+  { icon: "mail", title: "Confirmación", text: "Te enviamos el comprobante de pago a tu correo." },
   { icon: "box", title: "Preparación", text: "Empacamos tu equipo en las próximas 24 horas." },
   {
     icon: "truck",
@@ -20,21 +20,51 @@ const nextSteps: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
-export default async function SuccessPage({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) {
-  const { session_id } = await searchParams;
-  if (!session_id) redirect("/");
+const paymentMethods: Record<string, string> = {
+  CARD: "Tarjeta",
+  PSE: "PSE",
+  NEQUI: "Nequi",
+  BANCOLOMBIA_TRANSFER: "Botón Bancolombia",
+  BANCOLOMBIA_COLLECT: "Corresponsal Bancolombia",
+  DAVIPLATA: "Daviplata",
+};
 
-  let session;
-  try {
-    session = await getStripe().checkout.sessions.retrieve(session_id, { expand: ["line_items"] });
-  } catch {
-    redirect("/");
+/** Wompi redirige aquí con ?id=<id de la transacción>. */
+export default async function PaymentResultPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+  const { id } = await searchParams;
+  if (!id) redirect("/");
+
+  const transaction = await getTransaction(id).catch(() => null);
+  if (!transaction) redirect("/");
+
+  const paid = transaction.status === "APPROVED";
+  const pending = transaction.status === "PENDING";
+  const shipping = transaction.shipping_address;
+  const total = formatPrice(fromCents(transaction.amount_in_cents), transaction.currency);
+  const method = transaction.payment_method_type
+    ? (paymentMethods[transaction.payment_method_type] ?? transaction.payment_method_type)
+    : null;
+
+  if (!paid && !pending) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-20 text-center sm:px-6">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
+          <Icon name="lock" className="h-8 w-8" />
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">El pago no se completó</h1>
+        <p className="mt-3 text-zinc-500">
+          {transaction.status_message ?? "La transacción fue rechazada."} No se hizo ningún cobro. Tus productos siguen en el
+          carrito.
+        </p>
+        <Link
+          href="/carrito"
+          className="mt-8 inline-block rounded-full bg-zinc-900 px-6 py-3 font-semibold text-white transition hover:bg-zinc-700"
+        >
+          Volver al carrito
+        </Link>
+      </div>
+    );
   }
-
-  const paid = session.payment_status === "paid";
-  const currency = session.currency ?? storeConfig.currency;
-  const shipping = session.collected_information?.shipping_details;
-  const money = (amount: number) => formatPrice(fromStripeAmount(amount, currency), currency);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
@@ -49,11 +79,11 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{paid ? "¡Gracias por tu compra!" : "Estamos procesando tu pago"}</h1>
           <p className="mx-auto mt-3 max-w-md text-zinc-400">
             {paid
-              ? `Tu pago fue aprobado. Enviamos la confirmación a ${session.customer_details?.email ?? "tu correo"}.`
-              : "Te avisaremos por correo apenas se confirme."}
+              ? `Tu pago fue aprobado. Enviamos la confirmación a ${transaction.customer_email ?? "tu correo"}.`
+              : "Tu banco aún no confirma el pago. Te avisaremos por correo apenas se apruebe."}
           </p>
           <p className="mt-6 inline-block rounded-full bg-white/10 px-4 py-1.5 font-mono text-xs text-zinc-300">
-            Pedido #{session.id.slice(-10).toUpperCase()}
+            Pedido #{transaction.reference}
           </p>
         </div>
 
@@ -61,21 +91,19 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-400">Resumen</h2>
             <ul className="divide-y divide-zinc-100 text-sm">
-              {session.line_items?.data.map((li) => (
-                <li key={li.id} className="flex justify-between gap-4 py-3">
-                  <span className="text-zinc-700">
-                    <span className="font-semibold text-zinc-900">{li.quantity}×</span> {li.description}
-                  </span>
-                  <span className="font-medium tabular-nums">{money(li.amount_total)}</span>
+              {method && (
+                <li className="flex justify-between py-3 text-zinc-500">
+                  <span>Medio de pago</span>
+                  <span className="font-medium text-zinc-900">{method}</span>
                 </li>
-              ))}
+              )}
               <li className="flex justify-between py-3 text-zinc-500">
                 <span>Envío</span>
                 <span className="font-medium text-emerald-600">Gratis</span>
               </li>
               <li className="flex justify-between pt-4 text-base font-bold">
-                <span>Total pagado</span>
-                <span className="tabular-nums">{money(session.amount_total ?? 0)}</span>
+                <span>{paid ? "Total pagado" : "Total"}</span>
+                <span className="tabular-nums">{total}</span>
               </li>
             </ul>
           </section>
@@ -84,14 +112,18 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-400">Enviar a</h2>
               <address className="text-sm not-italic leading-relaxed text-zinc-700">
-                <span className="font-semibold text-zinc-900">{shipping.name}</span>
+                {shipping.name && (
+                  <>
+                    <span className="font-semibold text-zinc-900">{shipping.name}</span>
+                    <br />
+                  </>
+                )}
+                {shipping.address_line_1}
+                {shipping.address_line_2 && <>, {shipping.address_line_2}</>}
                 <br />
-                {shipping.address.line1}
-                {shipping.address.line2 && <>, {shipping.address.line2}</>}
+                {[shipping.city, shipping.region, shipping.postal_code].filter(Boolean).join(", ")}
                 <br />
-                {[shipping.address.city, shipping.address.state, shipping.address.postal_code].filter(Boolean).join(", ")}
-                <br />
-                {shipping.address.country}
+                {shipping.country}
               </address>
             </section>
           )}
