@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Phone Store — Tienda de celulares
 
-## Getting Started
+Next.js 15 (App Router) + TypeScript + Tailwind + Stripe Checkout (pago con tarjeta).
 
-First, run the development server:
+## Puesta en marcha
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # y completa las claves
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Claves de Stripe
+1. Entra a https://dashboard.stripe.com/apikeys y copia la **Secret key** en `STRIPE_SECRET_KEY`.
+   - `sk_test_...` → modo prueba (tarjeta `4242 4242 4242 4242`, cualquier fecha futura y CVC).
+   - `sk_live_...` → cobros reales (requiere cuenta activada).
+2. Webhook (confirmación confiable del pago):
+   - **Local:** `stripe listen --forward-to localhost:3000/api/webhooks/stripe` y copia el `whsec_...`.
+   - **Producción:** Dashboard → Developers → Webhooks → endpoint `https://tu-dominio.com/api/webhooks/stripe`
+     con los eventos `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`.
+3. En producción pon `NEXT_PUBLIC_SITE_URL=https://tu-dominio.com`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estructura
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/
+    page.tsx                    Home: hero + catálogo
+    productos/[slug]/page.tsx   Detalle del producto
+    carrito/page.tsx            Carrito completo
+    checkout/exito/page.tsx     Confirmación (lee la sesión de Stripe)
+    api/checkout/route.ts       Crea la sesión de Stripe Checkout
+    api/webhooks/stripe/route.ts Recibe eventos de pago (fulfillOrder)
+  components/
+    layout/  home/  product/  cart/  ui/
+  config/store.ts               Nombre, moneda, países de envío
+  context/CartContext.tsx       Estado del carrito (persistido en localStorage)
+  data/products.ts              Catálogo y precios (fuente de verdad)
+  lib/                          Stripe, formato de precios, helpers
+  services/checkout.ts          Cliente → /api/checkout → redirección
+```
 
-## Learn More
+## Seguridad del pago
+- El navegador solo envía `productId`, `variantId` y `cantidad`; **los precios se calculan en el servidor** desde `src/data/products.ts`.
+- Los datos de la tarjeta nunca pasan por este servidor: los captura Stripe en su página alojada (PCI cumplido).
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Personalizar
+- **Productos/precios:** `src/data/products.ts`. Para fotos reales, coloca la imagen en `public/products/` y añade `image: "/products/archivo.png"`.
+- **Moneda:** `NEXT_PUBLIC_CURRENCY` (los precios del catálogo deben estar en esa moneda).
+- **Post-pago:** implementa `fulfillOrder` en `src/app/api/webhooks/stripe/route.ts` (guardar pedido, descontar stock, email).
