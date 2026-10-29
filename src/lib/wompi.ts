@@ -63,9 +63,11 @@ export function buildCheckoutUrl(params: { reference: string; amountInCents: num
     "amount-in-cents": String(params.amountInCents),
     reference: params.reference,
     "signature:integrity": integritySignature(params.reference, params.amountInCents, params.currency),
-    "redirect-url": params.redirectUrl,
     "collect-shipping": "true",
   });
+  // El firewall de Wompi responde 403 si redirect-url apunta a localhost; en local el cliente
+  // se queda en la página de resultado de Wompi en vez de volver a la tienda.
+  if (params.redirectUrl.startsWith("https://")) query.set("redirect-url", params.redirectUrl);
   return `https://checkout.wompi.co/p/?${query}`;
 }
 
