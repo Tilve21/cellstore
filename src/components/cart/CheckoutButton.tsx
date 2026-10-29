@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { redirectToCheckout } from "@/services/checkout";
@@ -16,6 +17,8 @@ interface CheckoutButtonProps {
 export function CheckoutButton({ items, disabled, className = "", children = "Ir a pagar" }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Autorización de tratamiento de datos (Ley 1581) y aceptación de términos antes de pagar
+  const [accepted, setAccepted] = useState(false);
 
   async function handleClick() {
     setLoading(true);
@@ -30,10 +33,29 @@ export function CheckoutButton({ items, disabled, className = "", children = "Ir
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
+      <label className="flex items-start gap-2 text-xs leading-relaxed text-zinc-500">
+        <input
+          type="checkbox"
+          checked={accepted}
+          onChange={(e) => setAccepted(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600"
+        />
+        <span>
+          Acepto los{" "}
+          <Link href="/terminos" target="_blank" className="font-medium text-zinc-700 underline">
+            términos y condiciones
+          </Link>{" "}
+          y autorizo el{" "}
+          <Link href="/privacidad" target="_blank" className="font-medium text-zinc-700 underline">
+            tratamiento de mis datos personales
+          </Link>
+          .
+        </span>
+      </label>
       <button
         type="button"
         onClick={handleClick}
-        disabled={disabled || loading || items.length === 0}
+        disabled={disabled || loading || !accepted || items.length === 0}
         className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-600 to-brand-500 px-6 py-4 font-semibold text-white shadow-lg shadow-brand-600/30 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? (
