@@ -13,7 +13,7 @@ export function Header() {
     <>
       <div className="bg-zinc-950 text-center text-xs font-medium text-zinc-300">
         <p className="mx-auto max-w-7xl px-4 py-2">
-          <span className="text-white">{storeConfig.shipping.label}</span> · Paga seguro con tarjeta de crédito o débito
+          <span className="text-white">{storeConfig.shipping.label}</span> · Paga con tarjeta, PSE o Nequi
         </p>
       </div>
       <header className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl">
