@@ -2,35 +2,64 @@
 
 import { useMemo, useState } from "react";
 import { getStartingPrice } from "@/lib/products";
-import type { Brand, Product } from "@/types";
+import type { Brand, Category, Product } from "@/types";
 import { ProductCard } from "./ProductCard";
 
 type SortOption = "featured" | "price-asc" | "price-desc";
 
-interface ProductCatalogProps {
-  products: Product[];
-  brands: Brand[];
-}
+const categories: { id: Category | "all"; label: string }[] = [
+  { id: "all", label: "Todo" },
+  { id: "celulares", label: "Celulares" },
+  { id: "audifonos", label: "Audífonos" },
+];
 
-export function ProductCatalog({ products, brands }: ProductCatalogProps) {
+export function ProductCatalog({ products }: { products: Product[] }) {
+  const [category, setCategory] = useState<Category | "all">("all");
   const [brand, setBrand] = useState<Brand | "all">("all");
   const [sort, setSort] = useState<SortOption>("featured");
 
+  const inCategory = useMemo(
+    () => (category === "all" ? products : products.filter((p) => p.category === category)),
+    [products, category],
+  );
+  const brands = useMemo(() => Array.from(new Set(inCategory.map((p) => p.brand))), [inCategory]);
+
   const visible = useMemo(() => {
-    const filtered = brand === "all" ? products : products.filter((p) => p.brand === brand);
+    const filtered = brand === "all" ? inCategory : inCategory.filter((p) => p.brand === brand);
     if (sort === "featured") return filtered;
     return [...filtered].sort((a, b) =>
       sort === "price-asc" ? getStartingPrice(a) - getStartingPrice(b) : getStartingPrice(b) - getStartingPrice(a),
     );
-  }, [products, brand, sort]);
+  }, [inCategory, brand, sort]);
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex w-fit gap-1 rounded-full bg-zinc-100 p-1" role="group" aria-label="Filtrar por categoría">
+        {categories.map((c) => {
+          const active = category === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => {
+                setCategory(c.id);
+                setBrand("all");
+              }}
+              aria-pressed={active}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                active ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrar por marca">
           {(["all", ...brands] as const).map((b) => {
             const active = brand === b;
-            const count = b === "all" ? products.length : products.filter((p) => p.brand === b).length;
+            const count = b === "all" ? inCategory.length : inCategory.filter((p) => p.brand === b).length;
             return (
               <button
                 key={b}

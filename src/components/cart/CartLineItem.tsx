@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PhoneImage } from "@/components/product/PhoneImage";
+import { ProductImage } from "@/components/product/ProductImage";
 import { QuantitySelector } from "@/components/ui/QuantitySelector";
 import { storeConfig } from "@/config/store";
 import { useCart } from "@/context/CartContext";
@@ -15,7 +15,7 @@ export function CartLineItem({ item, onNavigate }: { item: ResolvedCartItem; onN
   return (
     <li className="flex gap-4 py-5">
       <Link href={`/productos/${item.product.slug}`} onClick={onNavigate} className="w-20 shrink-0">
-        <PhoneImage product={item.product} size="sm" className="!h-24" />
+        <ProductImage product={item.product} size="sm" className="!h-24" />
       </Link>
       <div className="flex flex-1 flex-col justify-between gap-2">
         <div className="flex justify-between gap-2">

@@ -41,7 +41,7 @@ export function ProductPurchase({ product }: { product: Product }) {
       </div>
 
       <fieldset>
-        <legend className="mb-3 text-sm font-semibold text-zinc-900">Almacenamiento</legend>
+        <legend className="mb-3 text-sm font-semibold text-zinc-900">{product.category === "audifonos" ? "Versión" : "Almacenamiento"}</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {product.variants.map((v) => {
             const active = v.id === variant.id;

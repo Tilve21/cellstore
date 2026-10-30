@@ -3,7 +3,7 @@
  */
 export const storeConfig = {
   name: "Phone Store",
-  tagline: "Celulares originales, con garantía y envío rápido",
+  tagline: "Celulares y audífonos originales, con garantía y envío rápido",
   /** Debe coincidir con --color-brand-600 en globals.css */
   brandColor: "#5b45f5",
   /** Wompi solo cobra en pesos colombianos; los precios de src/data/products.ts están en COP */

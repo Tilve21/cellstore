@@ -1,10 +1,10 @@
 import Image from "next/image";
-import type { CameraLayout, Product } from "@/types";
+import type { CameraLayout, HeadphoneStyle, Product } from "@/types";
 
-interface PhoneImageProps {
-  product: Pick<Product, "id" | "name" | "color" | "image" | "brand" | "camera">;
+interface ProductImageProps {
+  product: Pick<Product, "id" | "name" | "color" | "image" | "brand" | "camera" | "headphones">;
   size?: "sm" | "md" | "lg";
-  /** Muestra el fondo de color suave detrás del teléfono */
+  /** Muestra el fondo de color suave detrás del producto */
   framed?: boolean;
   className?: string;
 }
@@ -15,8 +15,8 @@ const heights = {
   lg: "h-[28rem]",
 };
 
-/** Foto del producto o, si no existe, ilustración vectorial de la parte trasera del teléfono. */
-export function PhoneImage({ product, size = "md", framed = true, className = "" }: PhoneImageProps) {
+/** Foto del producto o, si no existe, ilustración vectorial (parte trasera del teléfono o audífonos). */
+export function ProductImage({ product, size = "md", framed = true, className = "" }: ProductImageProps) {
   return (
     <div
       className={`relative flex w-full items-center justify-center overflow-hidden ${size === "sm" ? "rounded-xl" : "rounded-3xl"} ${heights[size]} ${className}`}
@@ -24,6 +24,8 @@ export function PhoneImage({ product, size = "md", framed = true, className = ""
     >
       {product.image ? (
         <Image src={product.image} alt={product.name} fill sizes="(min-width: 1024px) 40vw, 90vw" className="object-contain p-6" />
+      ) : product.headphones ? (
+        <HeadphoneSvg product={product} style={product.headphones} />
       ) : (
         <PhoneSvg product={product} detailed={size !== "sm"} />
       )}
@@ -31,7 +33,7 @@ export function PhoneImage({ product, size = "md", framed = true, className = ""
   );
 }
 
-function PhoneSvg({ product, detailed }: { product: PhoneImageProps["product"]; detailed: boolean }) {
+function PhoneSvg({ product, detailed }: { product: ProductImageProps["product"]; detailed: boolean }) {
   const id = `ph-${product.id}`;
   const dark = isDark(product.color);
   const logoFill = dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)";
@@ -60,7 +62,7 @@ function PhoneSvg({ product, detailed }: { product: PhoneImageProps["product"]; 
       <rect x="6.5" y="6.5" width="127" height="247" rx="22" fill={`url(#${id}-body)`} />
       <rect x="6.5" y="6.5" width="127" height="247" rx="22" fill={`url(#${id}-shine)`} />
 
-      <CameraModule layout={product.camera} color={product.color} lens={`url(#${id}-lens)`} />
+      <CameraModule layout={product.camera ?? "apple"} color={product.color} lens={`url(#${id}-lens)`} />
 
       {detailed && (
         <text x="70" y="215" textAnchor="middle" fontSize="9" fontWeight="600" letterSpacing="1.5" fill={logoFill} fontFamily="system-ui, sans-serif">
@@ -145,6 +147,88 @@ function CameraModule({ layout, color, lens }: { layout: CameraLayout; color: st
         </g>
       );
   }
+}
+
+function HeadphoneSvg({ product, style }: { product: ProductImageProps["product"]; style: HeadphoneStyle }) {
+  const id = `hp-${product.id}`;
+  const body = `url(#${id}-body)`;
+
+  return (
+    <svg viewBox="0 0 200 200" className="h-[72%] w-auto drop-shadow-[0_24px_30px_rgba(0,0,0,0.25)]" role="img" aria-label={product.name}>
+      <defs>
+        <linearGradient id={`${id}-body`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={shade(product.color, 0.22)} />
+          <stop offset="0.55" stopColor={product.color} />
+          <stop offset="1" stopColor={shade(product.color, -0.25)} />
+        </linearGradient>
+      </defs>
+      {style === "over-ear" && <OverEar color={product.color} body={body} />}
+      {style === "stem" && <StemBuds color={product.color} body={body} />}
+      {style === "buds" && <RoundBuds color={product.color} body={body} />}
+    </svg>
+  );
+}
+
+function OverEar({ color, body }: { color: string; body: string }) {
+  return (
+    <g>
+      {/* diadema */}
+      <path d="M38 112 C38 40 162 40 162 112" fill="none" stroke={shade(color, -0.3)} strokeWidth="14" strokeLinecap="round" />
+      <path d="M38 112 C38 40 162 40 162 112" fill="none" stroke={body} strokeWidth="9" strokeLinecap="round" />
+      {/* copas */}
+      {[44, 156].map((cx) => (
+        <g key={cx}>
+          <rect x={cx - 20} y="100" width="40" height="66" rx="20" fill={shade(color, -0.45)} />
+          <rect x={cx - 16} y="104" width="32" height="58" rx="16" fill={body} />
+          <rect x={cx - 3} y="92" width="6" height="14" rx="3" fill={shade(color, -0.3)} />
+        </g>
+      ))}
+    </g>
+  );
+}
+
+function StemBuds({ color, body }: { color: string; body: string }) {
+  return (
+    <g>
+      {/* estuche */}
+      <rect x="54" y="118" width="92" height="66" rx="26" fill={shade(color, -0.12)} />
+      <rect x="57" y="121" width="86" height="60" rx="24" fill={body} />
+      <line x1="58" y1="140" x2="142" y2="140" stroke="rgba(0,0,0,0.15)" strokeWidth="1.2" />
+      <circle cx="100" cy="158" r="2.5" fill="#22c55e" opacity="0.8" />
+      {/* audífonos */}
+      {[
+        { x: 74, flip: 1 },
+        { x: 126, flip: -1 },
+      ].map(({ x, flip }) => (
+        <g key={x} transform={`translate(${x} 22) scale(${flip} 1)`}>
+          <ellipse cx="0" cy="22" rx="18" ry="20" fill={body} stroke="rgba(0,0,0,0.12)" />
+          <ellipse cx="9" cy="16" rx="7" ry="8" fill={shade(color, -0.35)} />
+          <rect x="-8" y="34" width="13" height="58" rx="6.5" fill={body} stroke="rgba(0,0,0,0.12)" />
+          <rect x="-5" y="84" width="7" height="5" rx="2.5" fill="rgba(0,0,0,0.25)" />
+        </g>
+      ))}
+    </g>
+  );
+}
+
+function RoundBuds({ color, body }: { color: string; body: string }) {
+  return (
+    <g>
+      {/* estuche abierto */}
+      <path d="M42 108 C42 76 158 76 158 108 Z" fill={shade(color, -0.25)} />
+      <rect x="40" y="108" width="120" height="62" rx="28" fill={body} />
+      <ellipse cx="100" cy="108" rx="58" ry="7" fill={shade(color, -0.5)} />
+      <circle cx="100" cy="150" r="2.5" fill="#f5f5f4" opacity="0.7" />
+      {/* audífonos */}
+      {[72, 128].map((cx) => (
+        <g key={cx}>
+          <circle cx={cx} cy="58" r="22" fill={body} stroke="rgba(0,0,0,0.2)" />
+          <circle cx={cx} cy="58" r="12" fill={shade(color, -0.4)} />
+          <circle cx={cx - 5} cy="52" r="4" fill="#fff" opacity="0.2" />
+        </g>
+      ))}
+    </g>
+  );
 }
 
 /* ---------- utilidades de color ---------- */

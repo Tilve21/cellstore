@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Benefits } from "@/components/home/Benefits";
-import { PhoneImage } from "@/components/product/PhoneImage";
+import { ProductImage } from "@/components/product/ProductImage";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductPurchase } from "@/components/product/ProductPurchase";
 import { Icon } from "@/components/ui/Icon";
@@ -27,7 +27,11 @@ export default async function ProductPage({ params }: Props) {
 
   const related = getAllProducts()
     .filter((p) => p.id !== product.id)
-    .sort((a, b) => Number(b.brand === product.brand) - Number(a.brand === product.brand))
+    .sort(
+      (a, b) =>
+        Number(b.category === product.category) - Number(a.category === product.category) ||
+        Number(b.brand === product.brand) - Number(a.brand === product.brand),
+    )
     .slice(0, 4);
 
   return (
@@ -43,7 +47,7 @@ export default async function ProductPage({ params }: Props) {
       <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-14">
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-[2rem] border border-zinc-200 bg-white p-3">
-            <PhoneImage product={product} size="lg" />
+            <ProductImage product={product} size="lg" />
           </div>
         </div>
 

@@ -51,7 +51,7 @@ export function CartDrawer() {
             </span>
             <div>
               <p className="font-semibold text-zinc-900">Tu carrito está vacío</p>
-              <p className="text-sm text-zinc-500">Explora el catálogo y encuentra tu próximo celular.</p>
+              <p className="text-sm text-zinc-500">Explora el catálogo y encuentra tu próximo celular o audífonos.</p>
             </div>
             <Link href="/#catalogo" onClick={closeCart} className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-700">
               Ver catálogo

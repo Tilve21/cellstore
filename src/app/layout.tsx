@@ -14,7 +14,7 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: {
-    default: `${storeConfig.name} · Celulares`,
+    default: `${storeConfig.name} · Celulares y audífonos`,
     template: `%s · ${storeConfig.name}`,
   },
   description: storeConfig.tagline,

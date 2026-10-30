@@ -18,7 +18,7 @@ export function CartView() {
         </span>
         <div>
           <p className="text-lg font-semibold text-zinc-900">Tu carrito está vacío</p>
-          <p className="text-zinc-500">Agrega un celular para empezar tu compra.</p>
+          <p className="text-zinc-500">Agrega un producto para empezar tu compra.</p>
         </div>
         <Link href="/#catalogo" className="rounded-full bg-zinc-900 px-6 py-3 font-semibold text-white hover:bg-zinc-700">
           Ir al catálogo

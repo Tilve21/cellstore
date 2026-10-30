@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PhoneImage } from "@/components/product/PhoneImage";
+import { ProductImage } from "@/components/product/ProductImage";
 import { Icon } from "@/components/ui/Icon";
 import { formatPrice } from "@/lib/format";
 import { getStartingPrice } from "@/lib/products";
@@ -30,7 +30,7 @@ export function Hero({ featured }: { featured: Product[] }) {
             </span>
           </h1>
           <p className="max-w-lg text-lg leading-relaxed text-zinc-400">
-            iPhone, Galaxy, Pixel, Xiaomi y Motorola originales y sellados. Paga con tarjeta en segundos y recíbelo en casa.
+            iPhone, Galaxy, Pixel, Xiaomi y Motorola, además de audífonos AirPods, Sony y JBL, originales y sellados. Paga con tarjeta en segundos y recíbelo en casa.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -63,7 +63,7 @@ export function Hero({ featured }: { featured: Product[] }) {
 
         <div className="relative mx-auto w-full max-w-md">
           <Link href={`/productos/${main.slug}`} className="animate-float block">
-            <PhoneImage product={main} size="lg" framed={false} />
+            <ProductImage product={main} size="lg" framed={false} />
           </Link>
           <div className="absolute bottom-10 left-0 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-xl sm:-left-6">
             <p className="text-xs text-zinc-400">{main.name}</p>
@@ -76,7 +76,7 @@ export function Hero({ featured }: { featured: Product[] }) {
                 href={`/productos/${p.slug}`}
                 className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 py-1.5 pl-1.5 pr-4 text-sm backdrop-blur-xl transition hover:bg-white/20"
               >
-                <span className="w-10"><PhoneImage product={p} size="sm" /></span>
+                <span className="w-10"><ProductImage product={p} size="sm" /></span>
                 {p.name}
               </Link>
             ))}

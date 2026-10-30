@@ -3,7 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 import { formatPrice } from "@/lib/format";
 import { getStartingPrice } from "@/lib/products";
 import type { Product } from "@/types";
-import { PhoneImage } from "./PhoneImage";
+import { ProductImage } from "./ProductImage";
 
 export function ProductCard({ product }: { product: Product }) {
   const inStock = product.variants.some((v) => v.stock > 0);
@@ -14,7 +14,7 @@ export function ProductCard({ product }: { product: Product }) {
       className="group flex flex-col rounded-3xl border border-zinc-200 bg-white p-3 transition duration-300 hover:-translate-y-1 hover:border-zinc-300 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.25)]"
     >
       <div className="relative">
-        <PhoneImage product={product} className="transition duration-500 group-hover:[&_svg]:scale-105 [&_svg]:transition [&_svg]:duration-500" />
+        <ProductImage product={product} className="transition duration-500 group-hover:[&_svg]:scale-105 [&_svg]:transition [&_svg]:duration-500" />
         <div className="absolute left-3 top-3 flex gap-1.5">
           {product.isNew && (
             <span className="rounded-full bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-white">Nuevo</span>
